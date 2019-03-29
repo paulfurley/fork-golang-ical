@@ -1,6 +1,9 @@
 package ics
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestPropertyParse(t *testing.T) {
 	tests := []struct {

@@ -63,18 +63,36 @@ func (property *BaseProperty) serialize(w io.Writer) {
 	}
 	fmt.Fprint(b, ":")
 	fmt.Fprint(b, property.Value)
-	r := b.String()
-	if len(r) > 75 {
-		fmt.Fprint(w, r[:75], "\r\n")
-		r = r[75:]
-		fmt.Fprint(w, " ")
+	foldLine(b.String(), w)
+	fmt.Fprint(w, "\r\n")
+}
+
+// foldLine converts a line into multiple lines, where no line is longer than 75 octets (bytes)
+// as described in https://tools.ietf.org/html/rfc5545#section-3.1
+// Many runes are encoded with multiple bytes. foldLine ensures lines are not split mid-rune.
+func foldLine(longLine string, w io.Writer) error {
+	octetsThisLine := 0
+
+	for _, thisRune := range []rune(longLine) {
+		octetsThisRune := len(string(thisRune))
+
+		if octetsThisLine+octetsThisRune > 75 {
+			_, err := fmt.Fprint(w, "\r\n ")
+			if err != nil {
+				return err
+			}
+
+			octetsThisLine = 1 // initial whitespace character after \r\n
+		}
+
+		octetsThisLine += octetsThisRune
+
+		_, err := fmt.Fprint(w, string(thisRune))
+		if err != nil {
+			return err
+		}
 	}
-	for len(r) > 74 {
-		fmt.Fprint(w, r[:74], "\r\n")
-		r = r[74:]
-		fmt.Fprint(w, " ")
-	}
-	fmt.Fprint(w, r, "\r\n")
+	return nil
 }
 
 type IANAProperty struct {
