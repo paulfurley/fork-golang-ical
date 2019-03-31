@@ -25,7 +25,9 @@ func TestCalendarSerialize(t *testing.T) {
 	event.SetEndAt(one)
 	event.SetSummary("Test event")
 	event.SetLocation("Test address")
-	event.SetDescription("simple single-line description")
+	event.SetDescription(
+		"multi-line\n\ndescription with a comma, a semicolon; a backslash (\\) " +
+			"and ending with newlines\n\n")
 	event.SetURL("https://example.com/this-is-a-long-url-that-should-hit-the-75-octet-fold-limit")
 	event.SetOrganizer("sender@domain", WithCN("This Machine"))
 	// TODO: use AddAttendee and fix non-deterministic order of serializing caused by use of map
@@ -45,7 +47,8 @@ func TestCalendarSerialize(t *testing.T) {
 		"DTEND:20190331T130000Z\r\n" +
 		"SUMMARY:Test event\r\n" +
 		"LOCATION:Test address\r\n" +
-		"DESCRIPTION:simple single-line description\r\n" +
+		`DESCRIPTION:multi-line\n\ndescription with a comma\, a semicolon\; a backsl` + "\r\n" +
+		` ash (\) and ending with newlines\n\n` + "\r\n" +
 		"URL:https://example.com/this-is-a-long-url-that-should-hit-the-75-octet-fol\r\n" +
 		" d-limit\r\n" +
 		"ORGANIZER;CN=This Machine:sender@domain\r\n" +

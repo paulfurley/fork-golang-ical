@@ -62,9 +62,16 @@ func (property *BaseProperty) serialize(w io.Writer) {
 		}
 	}
 	fmt.Fprint(b, ":")
-	fmt.Fprint(b, property.Value)
+	fmt.Fprint(b, escape(property.Value))
 	foldLine(b.String(), w)
 	fmt.Fprint(w, "\r\n")
+}
+
+func escape(text string) (out string) {
+	out = strings.Replace(text, "\n", "\\n", -1)
+	out = strings.Replace(out, ",", "\\,", -1)
+	out = strings.Replace(out, ";", "\\;", -1)
+	return out
 }
 
 // foldLine converts a line into multiple lines, where no line is longer than 75 octets (bytes)
