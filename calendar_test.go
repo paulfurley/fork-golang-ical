@@ -6,7 +6,54 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 )
+
+func TestCalendarSerialize(t *testing.T) {
+	now := time.Date(2019, 3, 31, 9, 35, 45, 0, time.UTC)
+	midday := time.Date(2019, 3, 31, 12, 0, 0, 0, time.UTC)
+	one := time.Date(2019, 3, 31, 13, 0, 0, 0, time.UTC)
+
+	cal := NewCalendar()
+	cal.SetMethod(MethodRequest)
+
+	event := cal.AddEvent("fake-id")
+	event.SetCreatedTime(now)
+	event.SetDtStampTime(now)
+	event.SetModifiedAt(now)
+	event.SetStartAt(midday)
+	event.SetEndAt(one)
+	event.SetSummary("Test event")
+	event.SetLocation("Test address")
+	event.SetDescription("simple single-line description")
+	event.SetURL("https://example.com/this-is-a-long-url-that-should-hit-the-75-octet-fold-limit")
+	event.SetOrganizer("sender@domain", WithCN("This Machine"))
+	// TODO: use AddAttendee and fix non-deterministic order of serializing caused by use of map
+	// event.AddAttendee("nobody@example.com", CalendarUserTypeIndividual, ParticipationStatusNeedsAction, ParticipationRoleReqParticipant, WithRSVP(true))
+	got := cal.Serialize()
+
+	expected := "BEGIN:VCALENDAR\r\n" +
+		"VERSION:2.0\r\n" +
+		"PRODID:-//Arran Ubels//Golang ICS library\r\n" +
+		"METHOD:REQUEST\r\n" +
+		"BEGIN:VEVENT\r\n" +
+		"UID:fake-id\r\n" +
+		"CREATED:20190331T093545Z\r\n" +
+		"DTSTAMP:20190331T093545Z\r\n" +
+		"LAST-MODIFIED:20190331T093545Z\r\n" +
+		"DTSTART:20190331T120000Z\r\n" +
+		"DTEND:20190331T130000Z\r\n" +
+		"SUMMARY:Test event\r\n" +
+		"LOCATION:Test address\r\n" +
+		"DESCRIPTION:simple single-line description\r\n" +
+		"URL:https://example.com/this-is-a-long-url-that-should-hit-the-75-octet-fol\r\n" +
+		" d-limit\r\n" +
+		"ORGANIZER;CN=This Machine:sender@domain\r\n" +
+		"END:VEVENT\r\n" +
+		"END:VCALENDAR\r\n"
+
+	assertEqual(t, expected, got)
+}
 
 func TestCalendarStream(t *testing.T) {
 	i := `
