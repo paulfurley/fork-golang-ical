@@ -1,6 +1,7 @@
 package ics
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -57,7 +58,7 @@ CLASS:PUBLIC
 	}
 }
 
-func TestRfc5545Sec4Examples(t *testing.T) {
+func TestParseCalendarForRfc5545Sec4Examples(t *testing.T) {
 	inputs := []string{
 		`
 BEGIN:VCALENDAR
@@ -174,28 +175,32 @@ END:VFREEBUSY
 END:VCALENDAR
 `,
 	}
+
 	rnReplace := regexp.MustCompile("\r?\n")
 	for i, input := range inputs {
-		input = rnReplace.ReplaceAllString(input, "\r\n")
-		structure, err := ParseCalendar(strings.NewReader(input))
-		if err != nil {
-			t.Logf("%s", input)
-			t.Logf("%d. Error: %v", i, err)
-			t.Fail()
-			return
-		}
-		if structure == nil {
-			t.Logf("%s", input)
-			t.Logf("%d. Error: %v", i, "nil output")
-			t.Fail()
-			return
-		}
-		// This test should fail as the sample data doesn't conform to https://tools.ietf.org/html/rfc5545#page-45 Probably
-		// due to RFC width guides
-		output := structure.Serialize()
-		//structurejson, _ := json.MarshalIndent(structure, "", " ")
-		//t.Logf("\n\n\n%s \nvs\n \n\n\n%s \nvs \n\n%s\n\n", string(structurejson), input, output)
-		t.Logf("Input:\n\n%s \nvs\n \nOutput\n\n%s", input, output)
-		t.Fail()
+		t.Run(fmt.Sprintf("RFC 5455 example #%d", i), func(t *testing.T) {
+
+			input = rnReplace.ReplaceAllString(input, "\r\n")
+			structure, err := ParseCalendar(strings.NewReader(input))
+			assertNoError(t, err)
+
+			if structure == nil {
+				t.Fatalf("got nil error, but empty return value from ParseCalendar")
+			}
+		})
+	}
+}
+
+func assertEqual(t *testing.T, expected string, got string) {
+	if got != expected {
+		t.Errorf("\n--- expected ---\n%s\n--- got ---\n%s\n---\n", expected, got)
+	}
+}
+
+// assertNoError tests that got is nil and calls t.Fatal if not
+func assertNoError(t *testing.T, got error) {
+	t.Helper()
+	if got != nil {
+		t.Fatalf("got an error but didnt want one '%s'", got)
 	}
 }
