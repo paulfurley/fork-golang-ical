@@ -24,3 +24,38 @@ func TestPropertyParse(t *testing.T) {
 		}
 	}
 }
+
+func TestPropertySerialize(t *testing.T) {
+	tests := []struct {
+		property BaseProperty
+		expected string
+	}{
+		{
+			property: BaseProperty{
+				IANAToken:      "DESCRIPTION",
+				ICalParameters: map[string][]string{},
+				Value:          "foo",
+			},
+			expected: "DESCRIPTION:foo\r\n",
+		},
+		{
+			property: BaseProperty{
+				IANAToken:      "FOO",
+				ICalParameters: map[string][]string{},
+				Value:          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			expected: "FOO:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n a\r\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.expected, func(t *testing.T) {
+			buf := bytes.NewBuffer(nil)
+			test.property.serialize(buf)
+			got := buf.String()
+
+			assertEqual(t, test.expected, got)
+		})
+	}
+
+}
